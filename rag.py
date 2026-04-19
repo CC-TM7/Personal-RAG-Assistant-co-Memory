@@ -12,15 +12,15 @@ from langchain_openai import ChatOpenAI
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_classic.memory import ConversationBufferWindowMemory
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 DOCS_PATH = "./docs"
 CHROMA_PATH = "./chroma_db"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "gpt-4o"
+LLM_MODEL = "anthropic/claude-opus-4-7"
 COSMO_API_BASE = "https://ai.cosmoconsult.com/api/v1"
 
 
@@ -72,20 +72,25 @@ def build_chain(vectorstore):
         model=LLM_MODEL,
         api_key=os.environ.get("COSMO_API_KEY"),
         openai_api_base=COSMO_API_BASE,
-        temperature=0.3,
     )
 
     memory = ConversationBufferWindowMemory(
         memory_key="chat_history",
+        input_key="question",
+        output_key="answer",
         return_messages=True,
         k=10,  # remember last 10 exchanges
     )
 
     chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
-        retriever=vectorstore.as_retriever(search_kwargs={"k": 4}),
+        retriever=vectorstore.as_retriever(
+            search_type="mmr",
+            search_kwargs={"k": 6, "fetch_k": 20},
+        ),
         memory=memory,
         return_source_documents=True,
+        output_key="answer",
         verbose=False,
     )
 

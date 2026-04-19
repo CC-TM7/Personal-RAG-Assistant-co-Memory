@@ -16,6 +16,7 @@ ENV/
 
 # Vector database (generated at runtime)
 chroma_db/
+chroma_db_app/
 
 # User documents (personal files should not be committed)
 docs/*
