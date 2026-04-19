@@ -1,61 +1,82 @@
 # Personal RAG Assistant with Memory
 
-A chatbot that knows **your** documents. Upload PDFs, notes, or any text files and chat with them in natural language. A sliding-window conversation memory means context builds over time — follow-up questions just work.
+Ein KI-Chatbot, der deine eigenen Dokumente kennt. PDFs, Notizen oder Textdateien hochladen — und direkt im Chat damit arbeiten. Ein gleitendes Konversationsfenster sorgt dafür, dass Folgefragen funktionieren, ohne Kontext zu verlieren.
+
+Der Assistent läuft vollständig lokal (Embeddings, Vektordatenbank), nur die LLM-Anfragen gehen an die [COSMO AI API](https://ai.cosmoconsult.com).
 
 ---
 
-## What it does
+## Features
 
 | Feature | Detail |
 |---|---|
-| Document ingestion | PDF, TXT, Markdown |
-| Vector store | ChromaDB (local, no account needed) |
-| Embeddings | `all-MiniLM-L6-v2` via `sentence-transformers` |
-| LLM | Anthropic Claude (`claude-sonnet-4-20250514`) |
-| Memory | Last 10 conversation exchanges |
-| Source citations | Every answer shows which document it came from |
-| Interfaces | CLI (`rag.py`) **and** Streamlit web UI (`app.py`) |
+| Dokumenten-Ingestion | PDF, TXT, Markdown |
+| Vektordatenbank | ChromaDB (lokal, kein Account nötig) |
+| Embeddings | `all-MiniLM-L6-v2` via `sentence-transformers` (lokal) |
+| LLM-Backend | COSMO AI API (`https://ai.cosmoconsult.com/api/v1`) |
+| Modell-Auswahl | Wechsel zwischen Claude Opus, Claude Sonnet, GPT-4o, GPT-4o mini |
+| Retrieval | MMR (Maximal Marginal Relevance) für diverse Treffer |
+| Memory | Letzte 10 Konversations-Exchanges |
+| Quellangaben | Jede Antwort zeigt, aus welchem Dokument sie stammt |
+| Persistenz | Vektordatenbank bleibt zwischen Sessions erhalten |
+| Interfaces | CLI (`rag.py`) **und** Streamlit Web-UI (`app.py`) |
 
 ---
 
-## Setup (≈ 15 minutes)
+## Setup
 
-### 1. Clone and create a virtual environment
+### 1. Repository klonen
 
 ```bash
 git clone https://github.com/CC-TM7/Personal-RAG-Assistant-co-Memory.git
 cd Personal-RAG-Assistant-co-Memory
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
 ```
 
-### 2. Install dependencies
+### 2. Abhängigkeiten installieren
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Set your Anthropic API key
+### 3. API Key konfigurieren
+
+Erstelle eine `.env`-Datei im Projektordner:
 
 ```bash
-export ANTHROPIC_API_KEY=your_key_here   # Windows: set ANTHROPIC_API_KEY=your_key_here
+COSMO_API_KEY=dein_key_hier
 ```
 
-### 4. Add your documents
+Den Key bekommst du über das [COSMO AI Portal](https://ai.cosmoconsult.com).
 
-```bash
-# Copy PDFs, markdown files, or text files into docs/
-cp ~/path/to/notes.pdf docs/
-cp ~/path/to/research.md docs/
-```
+> Die `.env`-Datei ist in `.gitignore` eingetragen und wird nie ins Repository committed.
 
 ---
 
-## Run the CLI assistant
+## Streamlit Web-UI starten
+
+```bash
+python -m streamlit run app.py
+```
+
+Öffne <http://localhost:8501> im Browser.
+
+**Sidebar-Funktionen:**
+- COSMO API Key eingeben (alternativ via `.env`)
+- Modell wählen (Claude Opus, Claude Sonnet, GPT-4o, GPT-4o mini)
+- Dokumente per Drag-and-Drop hochladen
+- Übersicht aller indizierten Dateien
+- Wissensdatenbank löschen (mit Bestätigung)
+- Konversation zurücksetzen (Datenbank bleibt erhalten)
+
+---
+
+## CLI-Assistent starten
 
 ```bash
 python rag.py
 ```
+
+Legt alle Dokumente aus dem `docs/`-Ordner in die Vektordatenbank und startet eine interaktive Chat-Session im Terminal.
 
 ```
 Loading documents...
@@ -65,12 +86,9 @@ Vector store created
 
 RAG Assistant ready. Type your questions (type 'quit' to exit):
 
-You: What are the main points from the research paper?
+You: Was sind die wichtigsten Punkte aus dem Dokument?
 Assistant: …
-Sources: research.pdf (p. 3), research.pdf (p. 7)
-
-You: How does this connect to what the other document said about X?
-Assistant: …
+Sources: bericht.pdf (p. 3), bericht.pdf (p. 7)
 
 You: quit
 Goodbye!
@@ -78,37 +96,35 @@ Goodbye!
 
 ---
 
-## Run the Streamlit web interface
+## Verfügbare Modelle
 
-```bash
-streamlit run app.py
-```
-
-Open <http://localhost:8501> in your browser. You can:
-
-1. Paste your Anthropic API key in the sidebar
-2. Upload files via drag-and-drop
-3. Chat in the main window — sources are shown under each answer
-4. Click **Clear conversation** to start fresh
+| Modell-ID | Anzeigename | Empfehlung |
+|---|---|---|
+| `anthropic/claude-opus-4-7` | Claude Opus 4.7 | Beste Qualität, komplexe Fragen |
+| `anthropic/claude-sonnet-4-5` | Claude Sonnet 4.5 | Schneller, guter Allrounder |
+| `openai/gpt-4o` | GPT-4o | Strukturierte Antworten |
+| `openai/gpt-4o-mini` | GPT-4o mini | Günstig, für einfache Fragen |
 
 ---
 
-## Project structure
+## Projektstruktur
 
 ```
 .
-├── rag.py            # CLI RAG assistant
-├── app.py            # Streamlit web UI
-├── requirements.txt  # Python dependencies
-├── docs/             # Put your documents here (not committed)
-└── chroma_db/        # Auto-generated vector store (not committed)
+├── app.py              # Streamlit Web-UI
+├── rag.py              # CLI RAG-Assistent
+├── requirements.txt    # Python-Abhängigkeiten
+├── .env                # API Key (nicht committed)
+├── .streamlit/
+│   └── config.toml     # Streamlit-Konfiguration
+├── docs/               # Dokumente für CLI (nicht committed)
+└── chroma_db_app/      # Persistente Vektordatenbank (nicht committed)
 ```
 
 ---
 
-## What you'll learn
+## Technischer Hintergrund
 
-- How **RAG** (Retrieval-Augmented Generation) works end to end
-- How vector databases store and retrieve information
-- How conversation memory works in LLM applications
-- How to build something you'll actually use every day
+- **RAG** (Retrieval-Augmented Generation): Dokumente werden in Chunks zerlegt, als Vektoren gespeichert und bei jeder Anfrage semantisch durchsucht. Nur die relevantesten Passagen werden an das LLM übergeben.
+- **MMR-Retrieval**: Statt der `k` ähnlichsten Chunks werden diverse Treffer gewählt, die sich inhaltlich weniger überschneiden — bessere Antwortqualität bei breiten Fragen.
+- **Conversation Memory**: Die letzten 10 Frage-Antwort-Paare werden dem LLM als Kontext mitgegeben, sodass Folgefragen ohne Wiederholung funktionieren.
