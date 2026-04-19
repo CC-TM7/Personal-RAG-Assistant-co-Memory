@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Environment variables
+.env
+
+# Vector database (generated at runtime)
+chroma_db/
+
+# User documents (personal files should not be committed)
+docs/*
+!docs/.gitkeep
+
+# Streamlit cache
+.streamlit/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
