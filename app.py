@@ -13,7 +13,7 @@ import shutil
 import tempfile
 
 import streamlit as st
-from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -22,7 +22,8 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "claude-sonnet-4-20250514"
+LLM_MODEL = "claude-opus-4-7"
+COSMO_API_BASE = "https://ai.cosmoconsult.com/api/v1"
 CHROMA_PATH = "./chroma_db_app"
 
 
@@ -59,7 +60,12 @@ def build_vectorstore(chunks):
 
 
 def build_chain(vectorstore):
-    llm = ChatAnthropic(model=LLM_MODEL, temperature=0.3)
+    llm = ChatOpenAI(
+        model=LLM_MODEL,
+        api_key=os.environ.get("COSMO_API_KEY"),
+        openai_api_base=COSMO_API_BASE,
+        temperature=0.3,
+    )
     memory = ConversationBufferWindowMemory(
         memory_key="chat_history",
         return_messages=True,
@@ -112,12 +118,12 @@ with st.sidebar:
     st.header("📂 Your Documents")
 
     api_key = st.text_input(
-        "Anthropic API key",
+        "COSMO API key",
         type="password",
         help="Your key is used only during this session and never stored.",
     )
     if api_key:
-        os.environ["ANTHROPIC_API_KEY"] = api_key
+        os.environ["COSMO_API_KEY"] = api_key
 
     uploaded_files = st.file_uploader(
         "Upload PDFs, TXT, or Markdown files",
@@ -178,8 +184,8 @@ for msg in st.session_state.messages:
 
 # Chat input
 if prompt := st.chat_input("Ask a question about your documents…"):
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        st.warning("Please enter your Anthropic API key in the sidebar.")
+    if not os.environ.get("COSMO_API_KEY"):
+        st.warning("Please enter your COSMO API key in the sidebar.")
         st.stop()
 
     if st.session_state.chain is None:
