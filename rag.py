@@ -8,7 +8,7 @@ Anthropic Claude model and a sliding-window conversation memory.
 
 import os
 
-from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -20,7 +20,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 DOCS_PATH = "./docs"
 CHROMA_PATH = "./chroma_db"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "claude-sonnet-4-20250514"
+LLM_MODEL = "gpt-4o"
+COSMO_API_BASE = "https://ai.cosmoconsult.com/api/v1"
 
 
 def load_documents():
@@ -67,8 +68,10 @@ def create_vectorstore(chunks):
 
 def build_chain(vectorstore):
     """Build a ConversationalRetrievalChain with sliding-window memory."""
-    llm = ChatAnthropic(
+    llm = ChatOpenAI(
         model=LLM_MODEL,
+        api_key=os.environ.get("COSMO_API_KEY"),
+        openai_api_base=COSMO_API_BASE,
         temperature=0.3,
     )
 
